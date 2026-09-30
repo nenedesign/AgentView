@@ -1,4 +1,4 @@
-# agentview
+# AgentView — Observability & Traceability for Non-Technical Teams
 
 **See what your AI agent actually did, and why it failed, in one picture.**
 
