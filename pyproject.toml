@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentview"
+version = "0.1.0"
+description = "Open agent quality layer: capture agent runs, render a plain-English HTML report."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "nenedesign" }]
+keywords = [
+    "agent",
+    "observability",
+    "trace",
+    "visualization",
+    "validation",
+    "quality",
+    "llm",
+    "ai",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = ["pydantic>=2.0"]
+
+[project.urls]
+Homepage = "https://github.com/nenedesign/agentview"
+Repository = "https://github.com/nenedesign/agentview"
+Issues = "https://github.com/nenedesign/agentview/issues"
+
+[project.scripts]
+agentview = "agentview.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentview"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/agentview/report/template.html" = "agentview/report/template.html"
+"src/agentview/report/assets/cytoscape.min.js" = "agentview/report/assets/cytoscape.min.js"
+"src/agentview/report/assets/cytoscape.LICENSE" = "agentview/report/assets/cytoscape.LICENSE"
+"src/agentview/report/assets/report.css" = "agentview/report/assets/report.css"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/agentview/**",
+    "examples/**",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]
