@@ -2,6 +2,8 @@
 
 **See what your AI agent actually did, and why it failed, in one picture.**
 
+Agent traceability and observability for teams that need to show their work, not just ship it.
+
 `agentview` is a Python SDK that wraps your agent code, records what happened, and turns the recording into a single self-contained HTML page. The page shows every step your agent took as a colored node in a graph. Green worked. Yellow returned nothing. Red failed or made an unsupported claim. A non-technical viewer can look at the report and understand what went wrong in about thirty seconds, without asking anyone.
 
 The library ships with three demo runs. Two of them fail on purpose, in different ways, so the failure story is visible on first open.
