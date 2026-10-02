@@ -1,16 +1,18 @@
-# AgentView — Observability & Traceability for Non-Technical Teams
+# AgentView: Observability & Traceability for Non-Technical Teams
 
 **See what your AI agent actually did, and why it failed, in one picture.**
 
 Agent traceability and observability for teams that need to show their work, not just ship it.
 
-`agentview` is a Python SDK that wraps your agent code, records what happened, and turns the recording into a single self-contained HTML page. The page shows every step your agent took as a colored node in a graph. Green worked. Yellow returned nothing. Red failed or made an unsupported claim. A non-technical viewer can look at the report and understand what went wrong in about thirty seconds, without asking anyone.
+`agentview` is a Python SDK that wraps your agent code, records what happened, and turns the recording into a single self-contained HTML page. The page shows every step your agent took as a card on a vertical timeline, in the shape of a delivery-tracking view. Green worked. Yellow returned nothing. Red failed or made an unsupported claim. A non-technical viewer can look at the report and understand what went wrong in about thirty seconds, without asking anyone.
 
 The library ships with three demo runs. Two of them fail on purpose, in different ways, so the failure story is visible on first open.
 
 ## What the report looks like
 
-A single HTML file. The graph is the first thing you see. Every node has a plain-language label, not a function name. Every failure has a sentence explaining what happened. There is a legend, a step-by-step timeline, and a details panel that shows exactly what the validator said. The file is offline, self-contained, and safe to open in any browser. It never loads anything from the internet.
+A single HTML file, around 18 KB. At the top, a boarding-pass summary card with a big status glyph, a one-sentence plain-English outcome, and four facts (outcome, steps, duration, where it failed). Below the summary, a vertical timeline. Each step is a card with a past-tense action-verb title ("Searched the product catalog"), a one-sentence outcome, and the elapsed time. Failed steps get a red-bordered callout with a "Why this failed" block that quotes the validator in plain English. Validators appear as nested substeps under the step they judged, in a PR-review-thread style. At the bottom, a one-paragraph recap of the whole run. There is also a print stylesheet for anyone who prints things.
+
+The file is offline, self-contained, and safe to open in any browser. It never loads anything from the internet.
 
 Run `agentview demo` and open one of the three reports it writes. That is faster than any screenshot.
 
@@ -68,14 +70,14 @@ open report.html
 
 ## What you are looking at (for a non-technical reader)
 
-The graph shows every step the agent took, in order. Colors tell you what happened.
+The timeline shows every step the agent took, top to bottom, in the order it happened. The dot next to each step is color-coded.
 
 - **Green** worked as expected.
 - **Yellow** returned nothing or partial results.
 - **Red** failed, or made a claim that a validator marked as unsupported.
 - **Grey** was not judged here.
 
-A dashed orange edge labelled *validates* points from a validation step to the step it judged. If a validator turned a step red, you will see the dashed edge running to whichever step failed judgment. Click any node for the plain-English explanation and the detail the validator returned.
+A red step opens a "Why this failed" block below the step card. The block quotes the validator in plain English and names what kind of failure it was (unsupported claim, mismatched reference, empty tool result). Validators that judged a step appear as substeps nested under that step. A collapsed "developer detail" block under each step holds the raw span attributes for anyone who wants them.
 
 ## What it captures
 
@@ -103,7 +105,7 @@ Concretely:
 | | agentview | Trace platforms |
 |-|-|-|
 | Primary artefact | Single self-contained HTML report | Server-hosted dashboard |
-| Layperson-first UX | Yes, colored graph plus sentence explanations | No, developer table view |
+| Layperson-first UX | Yes, timeline cards plus plain-English sentences | No, developer table view |
 | Portable | One file, opens anywhere, offline | Requires access to the platform |
 | Validation as a first-class span kind | Yes | No, treated as attribute or eval score |
 | Server required | No | Usually yes |
@@ -114,7 +116,7 @@ Concretely:
 ## Design principles
 
 1. **Capture once, interpret many ways.** The JSONL trace file is the source of truth. The HTML report is one interpretation. Evaluators, dashboards, and CI gates can read the same file.
-2. **Layperson-first UX.** Every design decision, from node color to sentence-level explanations, is judged against whether a non-technical viewer can understand the report without help. A screenshot of the report has to be legible to someone who has never used the library.
+2. **Layperson-first UX.** Every design decision, from status-dot color to sentence-level explanations, is judged against whether a non-technical viewer can understand the report without help. A screenshot of the report has to be legible to someone who has never used the library.
 3. **Claim-versus-evidence validation.** A validator is a first-class span kind. It records what claim was made, what evidence was actually available, and what it judged. The report shows both the claim and the evidence, side by side.
 4. **Privacy by default.** Prompts and responses off, secrets scrubbed. Users opt in to content capture. This is a baseline, not a differentiator.
 5. **Portable single file.** The HTML report is self-contained. No network. No server. No dependencies at open time. It works on an airplane.
@@ -129,10 +131,10 @@ MVP 1 (this release) ships the capture and report loop. Future work builds on it
 
 ## What is inside
 
-- `src/agentview/decorators.py` — the public API: `@observe_agent`, `@observe_tool`, `@observe_model`, `@observe_validation`.
-- `src/agentview/events.py` — the JSONL event contract, as Pydantic v2 models. Any external tool can validate a trace file without depending on the SDK.
-- `src/agentview/report/` — the report builder and renderer. Vendored [Cytoscape.js](https://js.cytoscape.org/) (MIT) is inlined so the report is one file.
-- `examples/product_search/` — the runnable demo agent.
+- `src/agentview/decorators.py`: the public API. `@observe_agent`, `@observe_tool`, `@observe_model`, `@observe_validation`.
+- `src/agentview/events.py`: the JSONL event contract, as Pydantic v2 models. Any external tool can validate a trace file without depending on the SDK.
+- `src/agentview/report/`: the report builder and renderer. The report is a single HTML file with inline CSS and no runtime network calls.
+- `examples/product_search/`: the runnable demo agent.
 
 ## Requirements
 
@@ -144,5 +146,3 @@ Nothing else at runtime. No server. No network.
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
-
-The report inlines a vendored copy of Cytoscape.js, which is MIT-licensed. Its license is embedded in every rendered report and is available at [src/agentview/report/assets/cytoscape.LICENSE](src/agentview/report/assets/cytoscape.LICENSE).
