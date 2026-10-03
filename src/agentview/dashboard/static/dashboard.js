@@ -300,5 +300,10 @@ fixtureSelect.addEventListener("change", (e) => loadSessions(e.target.value));
 
 (async () => {
   const defaultFixture = await loadFixtures();
-  await loadSessions(defaultFixture);
+  // honour ?fixture= in the URL so screenshots and deep links work
+  const urlFixture = new URLSearchParams(location.search).get("fixture");
+  if (urlFixture && fixtureSelect.querySelector(`option[value="${CSS.escape(urlFixture)}"]`)) {
+    fixtureSelect.value = urlFixture;
+  }
+  await loadSessions(fixtureSelect.value);
 })();

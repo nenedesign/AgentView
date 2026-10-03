@@ -1,7 +1,6 @@
 /* ============================================================
-   agentview dashboard - Milestone 1 Day 2
+   agentview dashboard - Milestone 1
    Design system: dark glass, delivery-tracking session cards.
-   Day 3 adds activity cards. Day 4 adds groups + dev detail.
    ============================================================ */
 
 /* --- tokens ------------------------------------------------- */
@@ -54,12 +53,15 @@ html { color-scheme: dark; }
 
 body {
   background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% -20%, rgba(122 162 255 / 0.06) 0%, transparent 60%);
   color: var(--fg);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter,
                system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
 ol, ul { list-style: none; }
@@ -95,11 +97,15 @@ ol, ul { list-style: none; }
 
 .topbar-logo {
   font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--fg);
   text-decoration: none;
   flex-shrink: 0;
+  background: linear-gradient(135deg, #e6e8ec, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .topbar-logo:focus-visible {
   outline: 2px solid var(--accent);
@@ -250,14 +256,16 @@ ol, ul { list-style: none; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 18px 20px 16px;
-  transition: border-color 0.15s, background 0.15s;
+  padding: 20px 22px 18px;
+  transition: border-color 0.18s ease, background 0.18s ease,
+              box-shadow 0.18s ease;
   cursor: default;
 }
 
 .session-card:hover {
   background: var(--surface-h);
   border-color: var(--border-h);
+  box-shadow: 0 4px 24px rgba(0 0 0 / 0.25);
 }
 
 .session-header {
@@ -621,3 +629,38 @@ details[open] > .dev-detail-summary::before {
   margin: 20px 0 8px;
 }
 .day-heading:first-child { margin-top: 0; }
+
+/* --- responsive --------------------------------------------- */
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0 16px;
+    gap: 10px;
+  }
+
+  #fixture-select {
+    max-width: 160px;
+    font-size: 12px;
+  }
+
+  .main {
+    padding: 20px 16px 60px;
+  }
+
+  .session-card {
+    padding: 16px 16px 14px;
+  }
+
+  .session-header {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .activity-row-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .activity-duration {
+    margin-left: auto;
+  }
+}
