@@ -5,6 +5,8 @@ Subcommands:
 - `agentview report <trace.jsonl> -o report.html` renders a report from a trace
 - `agentview demo` runs the product-search demo and writes three reports
 - `agentview proxy -- <server command>` wraps an MCP server transparently
+- `agentview configure <server-name>` injects the proxy into claude_desktop_config.json
+- `agentview restore <server-name> --backup <path>` restores the original entry
 """
 
 from __future__ import annotations
@@ -65,6 +67,50 @@ def _cmd_proxy(server_argv: list[str]) -> int:
         print(f"agentview proxy: session complete", file=sys.stderr)
 
 
+def _cmd_configure(args: argparse.Namespace) -> int:
+    from agentview.proxy.config_safety import ConfigError, ConflictError, inject_proxy
+
+    try:
+        sha, backup = inject_proxy(
+            args.server_name,
+            config_path=Path(args.config) if args.config else None,
+            dry_run=args.dry_run,
+        )
+    except ConfigError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except ConflictError as exc:
+        print(f"conflict: {exc}", file=sys.stderr)
+        return 3
+
+    if args.dry_run:
+        print("(dry run: no changes written)")
+    else:
+        print(f"Backup written: {backup}")
+        print(f"Config updated. Restart Claude Desktop to apply.")
+    return 0
+
+
+def _cmd_restore(args: argparse.Namespace) -> int:
+    from agentview.proxy.config_safety import ConfigError, ConflictError, restore_entry
+
+    try:
+        backup = restore_entry(
+            args.server_name,
+            config_path=Path(args.config) if args.config else None,
+        )
+    except ConfigError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except ConflictError as exc:
+        print(f"conflict: {exc}", file=sys.stderr)
+        return 3
+
+    print(f"Backup written: {backup}")
+    print(f"Config restored. Restart Claude Desktop to apply.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     raw = argv if argv is not None else sys.argv[1:]
 
@@ -109,6 +155,17 @@ def main(argv: list[str] | None = None) -> int:
         add_help=False,
     )
     p.set_defaults(func=lambda _: _cmd_proxy([]))
+
+    cfg = sub.add_parser("configure", help="Inject agentview proxy into claude_desktop_config.json")
+    cfg.add_argument("server_name", help="Name of the MCP server entry to wrap")
+    cfg.add_argument("--config", default=None, help="Path to claude_desktop_config.json (default: auto-detect)")
+    cfg.add_argument("--dry-run", action="store_true", help="Show the proposed change without writing")
+    cfg.set_defaults(func=_cmd_configure)
+
+    rst = sub.add_parser("restore", help="Remove agentview proxy wrapper from an MCP server entry")
+    rst.add_argument("server_name", help="Name of the MCP server entry to restore")
+    rst.add_argument("--config", default=None, help="Path to claude_desktop_config.json (default: auto-detect)")
+    rst.set_defaults(func=_cmd_restore)
 
     args = parser.parse_args(raw)
     return args.func(args)
