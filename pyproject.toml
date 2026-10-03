@@ -34,7 +34,11 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Quality Assurance",
 ]
-dependencies = ["pydantic>=2.0"]
+dependencies = [
+    "pydantic>=2.0",
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+]
 
 [project.urls]
 Homepage = "https://github.com/nenedesign/agentview"
@@ -52,6 +56,9 @@ packages = ["src/agentview"]
 "src/agentview/report/assets/cytoscape.min.js" = "agentview/report/assets/cytoscape.min.js"
 "src/agentview/report/assets/cytoscape.LICENSE" = "agentview/report/assets/cytoscape.LICENSE"
 "src/agentview/report/assets/report.css" = "agentview/report/assets/report.css"
+"src/agentview/dashboard/static/index.html" = "agentview/dashboard/static/index.html"
+"src/agentview/dashboard/static/dashboard.css" = "agentview/dashboard/static/dashboard.css"
+"src/agentview/dashboard/static/dashboard.js" = "agentview/dashboard/static/dashboard.js"
 
 [tool.hatch.build.targets.sdist]
 include = [
