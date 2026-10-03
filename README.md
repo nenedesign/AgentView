@@ -8,6 +8,20 @@ Agent traceability and observability for teams that need to show their work, not
 
 The library ships with three demo runs. Two of them fail on purpose, in different ways, so the failure story is visible on first open.
 
+---
+
+## In development: MCP proxy dashboard (branch [`v1-dashboard`](https://github.com/nenedesign/AgentView/tree/v1-dashboard))
+
+The SDK above wraps your agent code. The MCP proxy dashboard does not touch your agent code at all.
+
+It sits between Claude Desktop and whichever MCP servers it is connected to, intercepts every JSON-RPC call in both directions, and shows the full activity in a browser at `localhost:7788`. Every tool call, every empty result, every server error appears as a glass-card session timeline with a plain-English status pill: Completed, Returned no usable data, Failed, or In progress.
+
+The wedge against Langfuse, Phoenix, and MLflow: those platforms require SDK instrumentation (wrap your agent code). This requires nothing. Install the proxy, restart Claude Desktop, open the dashboard. The agent stays unchanged.
+
+Current state: Milestone 1 (viewer proof) is complete. The dashboard renders against five bundled fixture traces, groups activity by a 2-second inter-call window, and passes a three-audience UX review: developer, employer, and non-technical stakeholder. Milestones 2 through 5 build the live proxy, config safety, and release hardening.
+
+---
+
 ## What the report looks like
 
 A single HTML file, around 18 KB. At the top, a boarding-pass summary card with a big status glyph, a one-sentence plain-English outcome, and four facts (outcome, steps, duration, where it failed). Below the summary, a vertical timeline. Each step is a card with a past-tense action-verb title ("Searched the product catalog"), a one-sentence outcome, and the elapsed time. Failed steps get a red-bordered callout with a "Why this failed" block that quotes the validator in plain English. Validators appear as nested substeps under the step they judged, in a PR-review-thread style. At the bottom, a one-paragraph recap of the whole run. There is also a print stylesheet for anyone who prints things.
