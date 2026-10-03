@@ -1,5 +1,5 @@
-// agentview dashboard - Milestone 1 Day 3
-// Activity rows with status pills, interpretation text, and privacy notice.
+// agentview dashboard - Milestone 1 Day 4
+// Activity groups, developer detail toggle, export link.
 
 const fixtureSelect = document.getElementById("fixture-select");
 const sessionList   = document.getElementById("session-list");
@@ -126,17 +126,60 @@ function buildActivityRow(activity) {
   return el("li", { className: "activity-row" }, ...children);
 }
 
-function buildActivitySection(activities) {
+function buildActivitySection(activities, groups, windowSeconds) {
   if (!activities || activities.length === 0) return null;
 
-  const rows = activities.map(buildActivityRow);
   const count = activities.length;
+
+  if (!groups || groups.length === 0) {
+    return el("div", { className: "activity-section" },
+      el("p", { className: "activity-section-heading" },
+        `${count} tool call${count !== 1 ? "s" : ""}`,
+      ),
+      el("ol", { className: "activity-list" }, ...activities.map(buildActivityRow)),
+    );
+  }
+
+  // index activities by id for group lookup
+  const byId = Object.fromEntries(activities.map((a) => [a.id, a]));
+
+  const groupEls = groups.map((group, gi) => {
+    const groupActs = (group.activity_ids || []).map((id) => byId[id]).filter(Boolean);
+    const threshold = windowSeconds != null ? `Window: ${windowSeconds} s` : "";
+    return el("div", { className: "activity-group" },
+      el("div", { className: "group-label" },
+        el("span", { className: "group-number" }, `Group ${gi + 1}`),
+        threshold
+          ? el("span", { className: "group-threshold", "aria-label": `Grouping window: ${windowSeconds} seconds` },
+              threshold,
+            )
+          : null,
+      ),
+      el("ol", { className: "activity-list" }, ...groupActs.map(buildActivityRow)),
+    );
+  });
 
   return el("div", { className: "activity-section" },
     el("p", { className: "activity-section-heading" },
-      `${count} tool call${count !== 1 ? "s" : ""}`,
+      `${count} tool call${count !== 1 ? "s" : ""} in ${groups.length} group${groups.length !== 1 ? "s" : ""}`,
     ),
-    el("ol", { className: "activity-list" }, ...rows),
+    ...groupEls,
+  );
+}
+
+// --- developer detail ----------------------------------------
+
+function buildDevDetail(session) {
+  const lines = [
+    `Session ID: ${session.id}`,
+    `Server:     ${session.server_name || "n/a"}`,
+    `State:      ${session.state}`,
+    `Started:    ${session.started_at || "n/a"}`,
+    `Ended:      ${session.ended_at   || "n/a"}`,
+  ];
+  return el("details", { className: "dev-detail" },
+    el("summary", { className: "dev-detail-summary" }, "Developer detail"),
+    el("pre", { className: "dev-detail-body" }, lines.join("\n")),
   );
 }
 
@@ -149,7 +192,7 @@ function buildPrivacyNotice() {
   );
 }
 
-function buildSessionCard(session) {
+function buildSessionCard(session, defaultWindowSeconds) {
   const serverLabel = session.server_name || session.id || "Unknown server";
   const state       = session.state || "unknown";
   const acts        = session.activities || [];
@@ -174,7 +217,8 @@ function buildSessionCard(session) {
     ? el("div", { className: "session-meta" }, ...metaItems)
     : null;
 
-  const actSection = buildActivitySection(acts);
+  const groups         = session.groups || [];
+  const windowSeconds  = defaultWindowSeconds;
 
   return el("li", { className: "session-card" },
     el("div", { className: "session-header" },
@@ -183,6 +227,7 @@ function buildSessionCard(session) {
     ),
     ...(meta ? [meta] : []),
     ...(actSection ? [actSection] : []),
+    buildDevDetail(session),
     buildPrivacyNotice(),
   );
 }
@@ -200,8 +245,9 @@ function render(data) {
   }
   trustPanel.hidden = true;
 
+  const windowSeconds = data.group_window_seconds;
   for (const session of sessions) {
-    sessionList.append(buildSessionCard(session));
+    sessionList.append(buildSessionCard(session, windowSeconds));
   }
 
   const skipped = data.skipped_lines || 0;

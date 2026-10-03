@@ -532,6 +532,85 @@ ol, ul { list-style: none; }
   letter-spacing: 0.03em;
 }
 
+/* --- activity group (Day 4) --------------------------------- */
+.activity-group {
+  margin-bottom: 12px;
+}
+
+.activity-group:last-child {
+  margin-bottom: 0;
+}
+
+.group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.group-number {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  letter-spacing: 0.03em;
+}
+
+.group-threshold {
+  font-size: 10px;
+  color: var(--fg-faint);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: rgba(255 255 255 / 0.02);
+}
+
+/* --- developer detail toggle (Day 4) ----------------------- */
+.dev-detail {
+  margin-top: 12px;
+}
+
+.dev-detail-summary {
+  font-size: 11px;
+  color: var(--fg-faint);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dev-detail-summary::-webkit-details-marker { display: none; }
+
+.dev-detail-summary::before {
+  content: "›";
+  display: inline-block;
+  transition: transform 0.15s;
+  font-size: 13px;
+}
+
+details[open] > .dev-detail-summary::before {
+  transform: rotate(90deg);
+}
+
+.dev-detail-summary:hover {
+  color: var(--fg-muted);
+}
+
+.dev-detail-body {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: "SF Mono", "Menlo", Consolas, monospace;
+  font-size: 11px;
+  color: var(--fg-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.7;
+}
+
 /* --- section heading (date separators, future use) ---------- */
 .day-heading {
   font-size: 11px;
