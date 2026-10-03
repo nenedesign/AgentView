@@ -6,7 +6,8 @@ Subcommands:
 - `agentview demo` runs the product-search demo and writes three reports
 - `agentview proxy -- <server command>` wraps an MCP server transparently
 - `agentview configure <server-name>` injects the proxy into claude_desktop_config.json
-- `agentview restore <server-name> --backup <path>` restores the original entry
+- `agentview restore <server-name>` restores the original entry
+- `agentview serve [trace.jsonl]` starts the local dashboard on 127.0.0.1
 """
 
 from __future__ import annotations
@@ -65,6 +66,37 @@ def _cmd_proxy(server_argv: list[str]) -> int:
     finally:
         interceptor.close()
         print(f"agentview proxy: session complete", file=sys.stderr)
+
+
+def _cmd_serve(args: argparse.Namespace) -> int:
+    try:
+        import uvicorn
+    except ImportError:
+        print("error: uvicorn is required for 'agentview serve'. Install with: pip install agentview[dashboard]", file=sys.stderr)
+        return 2
+
+    from agentview.dashboard.server import create_app, generate_session_token
+
+    host = "127.0.0.1"
+    port = args.port
+
+    if getattr(args, "public_bind", False):
+        print(
+            "\n  WARNING: --public-bind makes the dashboard reachable from other machines.\n"
+            "  Only use this in a trusted network with no sensitive trace data.\n",
+            file=sys.stderr,
+        )
+        host = "0.0.0.0"
+
+    token = generate_session_token()
+    app = create_app(session_token=token)
+
+    url = f"http://{host}:{port}/?token={token}"
+    print(f"agentview dashboard: {url}", file=sys.stderr)
+    print(f"agentview dashboard: press Ctrl+C to stop", file=sys.stderr)
+
+    uvicorn.run(app, host=host, port=port, log_level="error")
+    return 0
 
 
 def _cmd_configure(args: argparse.Namespace) -> int:
@@ -155,6 +187,11 @@ def main(argv: list[str] | None = None) -> int:
         add_help=False,
     )
     p.set_defaults(func=lambda _: _cmd_proxy([]))
+
+    srv = sub.add_parser("serve", help="Start the local dashboard on 127.0.0.1 (default port 7346)")
+    srv.add_argument("--port", type=int, default=7346, help="Port to listen on (default: 7346)")
+    srv.add_argument("--public-bind", action="store_true", help="Bind to 0.0.0.0 instead of 127.0.0.1 (WARNING: exposes dashboard on the network)")
+    srv.set_defaults(func=_cmd_serve)
 
     cfg = sub.add_parser("configure", help="Inject agentview proxy into claude_desktop_config.json")
     cfg.add_argument("server_name", help="Name of the MCP server entry to wrap")
