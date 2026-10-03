@@ -379,46 +379,157 @@ ol, ul { list-style: none; }
   font-variant-numeric: tabular-nums;
 }
 
-/* --- activity summary bar (Day 2: count only) --------------- */
-.activity-summary {
-  margin-top: 12px;
-  padding-top: 12px;
+/* --- activity list (Day 3) ---------------------------------- */
+.activity-section {
+  margin-top: 14px;
+  padding-top: 14px;
   border-top: 1px solid var(--border);
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
-.act-chip {
+.activity-section-heading {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  margin-bottom: 10px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* --- activity row ------------------------------------------- */
+.activity-row {
+  border-radius: 8px;
+  padding: 7px 10px 6px;
+  transition: background 0.12s;
+}
+
+.activity-row:hover {
+  background: rgba(255 255 255 / 0.03);
+}
+
+.activity-row-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+}
+
+.activity-tool {
+  flex: 1;
+  font-size: 13px;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
+  gap: 4px;
+  padding: 2px 8px;
   border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 500;
   border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.act-chip--completed {
+.activity-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.apill--completed {
   background: var(--c-ok-bg);
   color: var(--c-ok);
   border-color: var(--c-ok-border);
 }
-.act-chip--empty {
+.apill--completed .activity-pill-dot { background: var(--c-ok); }
+
+.apill--empty {
   background: var(--c-warn-bg);
   color: var(--c-warn);
   border-color: var(--c-warn-border);
 }
-.act-chip--failed {
+.apill--empty .activity-pill-dot { background: var(--c-warn); }
+
+.apill--failed {
   background: var(--c-err-bg);
   color: var(--c-err);
   border-color: var(--c-err-border);
 }
-.act-chip--in_progress {
+.apill--failed .activity-pill-dot { background: var(--c-err); }
+
+.apill--in_progress {
   background: var(--c-info-bg);
   color: var(--c-info);
   border-color: var(--c-info-border);
+}
+.apill--in_progress .activity-pill-dot {
+  background: var(--c-info);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.activity-duration {
+  font-size: 11px;
+  color: var(--fg-faint);
+  font-variant-numeric: tabular-nums;
+  min-width: 46px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* --- interpretation text (non-green activities) ------------- */
+.interpretation {
+  margin-top: 4px;
+  padding-left: 2px;
+  font-size: 12px;
+  color: var(--fg-muted);
+  line-height: 1.45;
+}
+
+.interpretation code {
+  background: rgba(255 255 255 / 0.07);
+  border-radius: var(--radius-code);
+  padding: 1px 5px;
+  font-family: "SF Mono", "Menlo", Consolas, monospace;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+/* --- privacy notice ----------------------------------------- */
+.privacy-notice {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--fg-faint);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.privacy-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: rgba(255 255 255 / 0.03);
+  color: var(--fg-faint);
+  font-size: 10px;
+  letter-spacing: 0.03em;
 }
 
 /* --- section heading (date separators, future use) ---------- */

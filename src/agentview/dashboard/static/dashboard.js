@@ -1,5 +1,5 @@
-// agentview dashboard - Milestone 1 Day 2
-// Session list shell. Day 3 adds activity cards inside each session card.
+// agentview dashboard - Milestone 1 Day 3
+// Activity rows with status pills, interpretation text, and privacy notice.
 
 const fixtureSelect = document.getElementById("fixture-select");
 const sessionList   = document.getElementById("session-list");
@@ -16,11 +16,16 @@ const STATE = {
   unknown:           { label: "No shutdown recorded", cls: "state--unknown"        },
 };
 
-const ACT_CHIP = {
-  completed:   { label: "Completed",                   cls: "act-chip--completed"   },
-  empty:       { label: "Returned no usable data",     cls: "act-chip--empty"       },
-  failed:      { label: "Failed",                      cls: "act-chip--failed"      },
-  in_progress: { label: "In progress",                 cls: "act-chip--in_progress" },
+const ACT_STATUS = {
+  completed:   { label: "Completed",               cls: "apill--completed"   },
+  empty:       { label: "Returned no usable data", cls: "apill--empty"       },
+  failed:      { label: "Failed",                  cls: "apill--failed"      },
+  in_progress: { label: "In progress",             cls: "apill--in_progress" },
+};
+
+const INTERPRETATION = {
+  empty:  "The tool responded, but the result contained no usable data.",
+  failed: "The tool returned an error. The agent may not have received the result it expected.",
 };
 
 // --- utilities -----------------------------------------------
@@ -61,41 +66,87 @@ function formatDuration(startedAt, endedAt) {
   return `${(ms / 1000).toFixed(1)} s`;
 }
 
-// --- session card builder ------------------------------------
+function formatMs(ms) {
+  if (ms == null) return null;
+  if (ms < 1000) return `${ms} ms`;
+  return `${(ms / 1000).toFixed(1)} s`;
+}
+
+function toolLabel(rawName) {
+  if (!rawName) return "Unknown tool";
+  return rawName.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+}
+
+// --- builders ------------------------------------------------
 
 function buildStatePill(state) {
   const conf = STATE[state] || { label: state, cls: "state--unknown" };
-  return el("span", { className: `state-pill ${conf.cls}`, "aria-label": `Session state: ${conf.label}` },
+  return el("span",
+    { className: `state-pill ${conf.cls}`, "aria-label": `Session state: ${conf.label}` },
     el("span", { className: "state-pill-dot", "aria-hidden": "true" }),
     conf.label,
   );
 }
 
-function buildActivitySummary(activities) {
-  if (!activities || activities.length === 0) return null;
+function buildActivityPill(status) {
+  const conf = ACT_STATUS[status] || { label: status, cls: "" };
+  return el("span", { className: `activity-pill ${conf.cls}` },
+    el("span", { className: "activity-pill-dot", "aria-hidden": "true" }),
+    conf.label,
+  );
+}
 
-  const counts = {};
-  for (const act of activities) {
-    const s = act.status || "unknown";
-    counts[s] = (counts[s] || 0) + 1;
-  }
+function buildActivityRow(activity) {
+  const label    = toolLabel(activity.tool_name);
+  const status   = activity.status || "in_progress";
+  const durLabel = formatMs(activity.duration_ms);
+  const interp   = INTERPRETATION[status];
 
-  const order = ["completed", "empty", "failed", "in_progress"];
-  const chips = [];
+  const errorNote = activity.error?.message
+    ? el("span", {}, " Error: ", el("code", {}, activity.error.message))
+    : null;
 
-  for (const status of order) {
-    if (!counts[status]) continue;
-    const conf = ACT_CHIP[status] || { label: status, cls: "" };
-    chips.push(
-      el("span", { className: `act-chip ${conf.cls}` },
-        String(counts[status]), " ", conf.label,
+  const rowHeader = el("div", { className: "activity-row-header" },
+    el("span", { className: "activity-tool" }, label),
+    buildActivityPill(status),
+    el("span", { className: "activity-duration" }, durLabel || ""),
+  );
+
+  const children = [rowHeader];
+
+  if (interp || errorNote) {
+    children.push(
+      el("p", { className: "interpretation" },
+        interp || "",
+        errorNote,
       ),
     );
   }
 
-  if (chips.length === 0) return null;
+  return el("li", { className: "activity-row" }, ...children);
+}
 
-  return el("div", { className: "activity-summary", "aria-label": "Activity breakdown" }, ...chips);
+function buildActivitySection(activities) {
+  if (!activities || activities.length === 0) return null;
+
+  const rows = activities.map(buildActivityRow);
+  const count = activities.length;
+
+  return el("div", { className: "activity-section" },
+    el("p", { className: "activity-section-heading" },
+      `${count} tool call${count !== 1 ? "s" : ""}`,
+    ),
+    el("ol", { className: "activity-list" }, ...rows),
+  );
+}
+
+function buildPrivacyNotice() {
+  return el("div", { className: "privacy-notice", "aria-label": "Privacy information" },
+    el("span", { className: "privacy-tag" }, "Observed"),
+    el("span", { className: "privacy-tag" }, "Stored"),
+    el("span", { className: "privacy-tag" }, "Displayed"),
+    el("span", {}, "Tool names, status, and timing. Message content is not captured by default."),
+  );
 }
 
 function buildSessionCard(session) {
@@ -107,29 +158,33 @@ function buildSessionCard(session) {
   const dateStr     = formatDate(session.started_at);
 
   const metaItems = [];
-  metaItems.push(el("span", {}, `${acts.length} tool call${acts.length !== 1 ? "s" : ""}`));
   if (duration) {
-    metaItems.push(el("span", { className: "sep", "aria-hidden": "true" }, "·"));
     metaItems.push(el("span", {}, duration));
   }
   if (dateStr || timeStr) {
-    metaItems.push(el("span", { className: "sep", "aria-hidden": "true" }, "·"));
-    metaItems.push(el("span", { className: "session-time" }, [dateStr, timeStr].filter(Boolean).join(" ")));
+    if (duration) {
+      metaItems.push(el("span", { className: "sep", "aria-hidden": "true" }, "·"));
+    }
+    metaItems.push(
+      el("span", { className: "session-time" }, [dateStr, timeStr].filter(Boolean).join(" ")),
+    );
   }
 
-  const meta = el("div", { className: "session-meta" }, ...metaItems);
-  const summary = buildActivitySummary(acts);
+  const meta = metaItems.length > 0
+    ? el("div", { className: "session-meta" }, ...metaItems)
+    : null;
 
-  const card = el("li", { className: "session-card" },
+  const actSection = buildActivitySection(acts);
+
+  return el("li", { className: "session-card" },
     el("div", { className: "session-header" },
       el("span", { className: "session-server" }, serverLabel),
       buildStatePill(state),
     ),
-    meta,
-    ...(summary ? [summary] : []),
+    ...(meta ? [meta] : []),
+    ...(actSection ? [actSection] : []),
+    buildPrivacyNotice(),
   );
-
-  return card;
 }
 
 // --- render session list -------------------------------------
