@@ -3,24 +3,49 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>agentview dashboard</title>
+    <title>agentview</title>
     <link rel="stylesheet" href="/static/dashboard.css" />
   </head>
   <body>
-    <main>
-      <header>
-        <h1>agentview</h1>
-        <p>Milestone 1 Day 1 plumbing check. Day 2 replaces this view.</p>
-      </header>
-      <section>
-        <h2>Fixture</h2>
-        <select id="fixture-select" aria-label="Fixture file"></select>
-      </section>
-      <section>
-        <h2>Parsed sessions (raw)</h2>
-        <pre id="output">Loading...</pre>
-      </section>
-    </main>
+    <div class="layout">
+
+      <nav class="topbar" role="banner">
+        <a class="topbar-logo" href="/" aria-label="agentview home">agentview</a>
+        <div class="topbar-controls">
+          <div class="fixture-wrap">
+            <label for="fixture-select" class="fixture-label">Trace</label>
+            <select id="fixture-select" aria-label="Select trace file"></select>
+          </div>
+          <span id="skipped-badge" class="badge badge-warn" hidden
+                aria-live="polite"></span>
+        </div>
+      </nav>
+
+      <main class="main" id="main">
+
+        <!-- shown when the trace has zero sessions -->
+        <section id="trust-panel" class="trust-panel" hidden
+                 aria-label="No sessions found">
+          <div class="trust-icon" aria-hidden="true">○</div>
+          <h2 class="trust-heading">No activity recorded</h2>
+          <p class="trust-sub">
+            Waiting for an agent to make its first tool call through the proxy.
+          </p>
+          <ul class="trust-checklist" aria-label="Troubleshooting checklist">
+            <li>Is <code>agentview proxy</code> running?</li>
+            <li>Is your MCP client pointed at the proxy address?</li>
+            <li>Has your agent made any tool calls this session?</li>
+            <li>Is the right trace file selected above?</li>
+          </ul>
+        </section>
+
+        <!-- populated by JS -->
+        <ol id="session-list" class="session-list"
+            aria-label="MCP sessions, most recent first"></ol>
+
+      </main>
+    </div>
+
     <script src="/static/dashboard.js"></script>
   </body>
 </html>
