@@ -45,7 +45,7 @@ def _cmd_demo(args: argparse.Namespace) -> int:
 
 
 def _cmd_proxy(server_argv: list[str]) -> int:
-    from agentview.proxy import PROXY_EXIT_FAILURE, run_proxy
+    from agentview.proxy import PROXY_EXIT_FAILURE, MCPInterceptor, run_proxy
 
     if not server_argv:
         print(
@@ -54,7 +54,15 @@ def _cmd_proxy(server_argv: list[str]) -> int:
             file=sys.stderr,
         )
         return PROXY_EXIT_FAILURE
-    return run_proxy(server_argv)
+
+    server_name = Path(server_argv[0]).name
+    interceptor = MCPInterceptor(server_name=server_name)
+    print(f"agentview proxy: trace -> {interceptor._trace_path}", file=sys.stderr)
+    try:
+        return run_proxy(server_argv, capture=interceptor.capture)
+    finally:
+        interceptor.close()
+        print(f"agentview proxy: session complete", file=sys.stderr)
 
 
 def main(argv: list[str] | None = None) -> int:
