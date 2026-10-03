@@ -1,9 +1,10 @@
 """agentview command line interface.
 
-Three subcommands:
+Subcommands:
 - `agentview version` prints the installed version
 - `agentview report <trace.jsonl> -o report.html` renders a report from a trace
 - `agentview demo` runs the product-search demo and writes three reports
+- `agentview proxy -- <server command>` wraps an MCP server transparently
 """
 
 from __future__ import annotations
@@ -43,7 +44,33 @@ def _cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_proxy(server_argv: list[str]) -> int:
+    from agentview.proxy import PROXY_EXIT_FAILURE, run_proxy
+
+    if not server_argv:
+        print(
+            "Usage: agentview proxy -- <server command and args>\n"
+            "Example: agentview proxy -- npx -y @modelcontextprotocol/server-filesystem /tmp",
+            file=sys.stderr,
+        )
+        return PROXY_EXIT_FAILURE
+    return run_proxy(server_argv)
+
+
 def main(argv: list[str] | None = None) -> int:
+    raw = argv if argv is not None else sys.argv[1:]
+
+    # Handle `agentview proxy -- <server command>` before argparse sees it,
+    # because argparse cannot cleanly handle `--` as a separator between
+    # subcommand flags and a free-form external command.
+    if raw and raw[0] == "proxy":
+        try:
+            sep = raw.index("--")
+            server_argv = raw[sep + 1:]
+        except ValueError:
+            server_argv = []
+        return _cmd_proxy(server_argv)
+
     parser = argparse.ArgumentParser(
         prog="agentview",
         description="Open agent quality layer: capture agent runs, render a plain-English HTML report.",
@@ -68,7 +95,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     d.set_defaults(func=_cmd_demo)
 
-    args = parser.parse_args(argv)
+    p = sub.add_parser(
+        "proxy",
+        help="Wrap an MCP server transparently (use: agentview proxy -- <command>)",
+        add_help=False,
+    )
+    p.set_defaults(func=lambda _: _cmd_proxy([]))
+
+    args = parser.parse_args(raw)
     return args.func(args)
 
 
